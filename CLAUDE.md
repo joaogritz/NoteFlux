@@ -80,21 +80,20 @@ dados · nuvem · vários SDKs de fabricantes · integração obrigatória com b
 | `npm run build`       | Sim (Linux, Windows)                                                           |
 | App a partir do build | Sim, janela renderizada (Linux em display virtual, Windows E2E)                |
 | `npm run dev`         | Sim no Linux (display virtual) e no Windows                                    |
-| Reprodução (etapa 3)  | Lógica sim (Electron no Linux, display virtual, sem áudio); som **não** ouvido |
+| Reprodução (etapa 3)  | Sim: lógica em testes automatizados (Linux, sem áudio) e som ouvido no Windows |
 
 ## Estado atual
 
 - **Etapa 2 — Importar e ler MIDI: concluída.** Diálogo de arquivo no main (filtro `.mid/.midi`, limite de 10 MB),
   função tipada `openMidiFile` no preload, leitura com `@tonejs/midi` no renderer (`parseMidi.ts`) e resumo no
   `App.tsx`.
-- **Etapa 3 — Reproduzir MIDI com Tone.js: implementada, aguardando teste de som.** Motor em
-  `src/renderer/src/playback/player.ts` (PolySynth sintetizado, um `Tone.Part`, Transport como único relógio),
-  botões Tocar/Pausar e Parar, posição `m:ss / m:ss` e barra de progresso só de leitura. Percussão (canal 10)
-  não toca. CSP com `worker-src 'self' blob:`. Testes automatizados no Electron (Linux, display virtual, sem
-  saída de áudio) confirmaram agendamento, pausa, parada, fim da música, troca de arquivo e janela oculta.
-  **Ninguém ouviu o som ainda.**
-- **Próxima: etapa 4 — Piano virtual sincronizado.** Antes dela, fazer os testes de som da etapa 3 numa máquina
-  com áudio (tabela "Como testar" de `docs/tasks/etapa-3-reproduzir-midi.md`).
+- **Etapa 3 — Reproduzir MIDI com Tone.js: concluída.** Motor em `src/renderer/src/playback/player.ts`
+  (PolySynth sintetizado, um `Tone.Part`, Transport como único relógio), botões Tocar/Pausar e Parar, posição
+  `m:ss / m:ss` e barra de progresso só de leitura. Percussão (canal 10) não toca. CSP com
+  `worker-src 'self' blob:`. Testes automatizados no Electron (Linux, sem áudio) e teste manual com som no
+  Windows: todos os itens da tabela de `docs/tasks/etapa-3-reproduzir-midi.md` passaram, incluindo um MIDI real
+  tocado mais de uma vez.
+- **Próxima: etapa 4 — Piano virtual sincronizado.**
 
 ## Em aberto
 
