@@ -87,7 +87,7 @@ dados · nuvem · vários SDKs de fabricantes · integração obrigatória com b
   um aviso. A API do preload (`window.noteflux`) ainda está vazia.
 - **Próxima: etapa 2 — Importar e ler MIDI.** Diálogo de arquivo no main (filtro `.mid/.midi`), função
   tipada no preload, leitura com `@tonejs/midi` no renderer e exibição de duração, trilhas e quantidade
-  de notas. Sem reprodução nessa etapa.
+  de notas. Sem reprodução nessa etapa. Briefing: `docs/tasks/etapa-2-importar-midi.md`.
 
 ## Em aberto
 
