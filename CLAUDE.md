@@ -72,16 +72,16 @@ dados · nuvem · vários SDKs de fabricantes · integração obrigatória com b
 
 ## Comandos verificados
 
-| Comando               | Verificado                                                                                     |
-| --------------------- | ---------------------------------------------------------------------------------------------- |
-| `npm install`         | Sim (Linux, Node 22; Windows, Node 26)                                                         |
-| `npm run typecheck`   | Sim, sem erros (Linux, Windows)                                                                |
-| `npm run lint`        | Sim, sem erros (Linux, Windows)                                                                |
-| `npm run build`       | Sim (Linux, Windows)                                                                           |
-| App a partir do build | Sim, janela renderizada (Linux em display virtual, Windows E2E)                                |
-| `npm run dev`         | Sim no Linux (display virtual) e no Windows                                                    |
-| Reprodução (etapa 3)  | Sim: lógica em testes automatizados (Linux, sem áudio) e som ouvido no Windows                 |
-| Piano (etapa 4)       | Lógica e tela sim (Electron no Linux, display virtual); sincronia com o som **não** verificada |
+| Comando               | Verificado                                                                                |
+| --------------------- | ----------------------------------------------------------------------------------------- |
+| `npm install`         | Sim (Linux, Node 22; Windows, Node 26)                                                    |
+| `npm run typecheck`   | Sim, sem erros (Linux, Windows)                                                           |
+| `npm run lint`        | Sim, sem erros (Linux, Windows)                                                           |
+| `npm run build`       | Sim (Linux, Windows)                                                                      |
+| App a partir do build | Sim, janela renderizada (Linux em display virtual, Windows E2E)                           |
+| `npm run dev`         | Sim no Linux (display virtual) e no Windows                                               |
+| Reprodução (etapa 3)  | Sim: lógica em testes automatizados (Linux, sem áudio) e som ouvido no Windows            |
+| Piano (etapa 4)       | Sim: lógica e tela em testes automatizados (Linux) e sincronia com o som vista no Windows |
 
 ## Estado atual
 
@@ -94,14 +94,12 @@ dados · nuvem · vários SDKs de fabricantes · integração obrigatória com b
   `worker-src 'self' blob:`. Testes automatizados no Electron (Linux, sem áudio) e teste manual com som no
   Windows: todos os itens da tabela de `docs/tasks/etapa-3-reproduzir-midi.md` passaram, incluindo um MIDI real
   tocado mais de uma vez.
-- **Etapa 4 — Piano virtual sincronizado: implementada, aguardando teste com som.** Piano de 88 teclas fixo na
-  parte de baixo da janela (`src/renderer/src/piano/`). As teclas acesas são calculadas a cada quadro pela
-  posição audível do Transport (`getSecondsAtTime(Tone.immediate())`), sem eventos de liga/desliga. Percussão
-  não aparece. Testes automatizados no Electron (Linux, display virtual, sem áudio) confirmaram as teclas
-  certas em cada momento, pausa, parada, fim, janela oculta, troca de arquivo e tamanho mínimo.
-  **Ninguém conferiu ainda se a tecla acende junto com o som.**
-- **Próxima: etapa 5 — Teste isolado do RGB em Python.** Antes dela, fazer os testes da etapa 4 numa máquina com
-  áudio (tabela "Como testar" de `docs/tasks/etapa-4-piano-virtual.md`).
+- **Etapa 4 — Piano virtual sincronizado: concluída.** Piano de 88 teclas fixo na parte de baixo da janela
+  (`src/renderer/src/piano/`). As teclas acesas são calculadas a cada quadro pela posição audível do Transport
+  (`getSecondsAtTime(Tone.immediate())`), sem eventos de liga/desliga. Percussão não aparece. Testes
+  automatizados no Electron (Linux) cobriram teclas certas, pausa, parada, fim, janela oculta, troca de arquivo e
+  tamanho mínimo. Teste manual no Windows com um MIDI real (Unravel): as teclas acenderam junto com o som.
+- **Próxima: etapa 5 — Teste isolado do RGB em Python.**
 
 ## Em aberto
 
