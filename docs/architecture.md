@@ -40,8 +40,15 @@ comandos de iluminação.
 ### Renderer — `src/renderer/`
 
 - Interface React.
-- A partir da etapa 2: leitura do MIDI.
-- A partir da etapa 3: reprodução com Tone.js.
+- A partir da etapa 2: leitura do MIDI (`src/renderer/src/midi/parseMidi.ts`).
+- A partir da etapa 3: reprodução com Tone.js (`src/renderer/src/playback/player.ts`).
+  - O player concentra todo o uso do Tone.js: `load`, `unload`, `play`, `pause`, `stop`, posição e
+    estado (`stopped`, `playing`, `paused`). O `App.tsx` acompanha o estado com `useSyncExternalStore`.
+  - Som sintetizado: `PolySynth(Synth)` com oscilador `triangle`, 64 vozes e volume de −8 dB. Sem samples.
+  - As notas de todas as trilhas tocáveis vão para um único `Tone.Part`, em segundos (o `@tonejs/midi` já
+    aplica as mudanças de andamento). O `Transport.bpm` não é alterado.
+  - Trilhas de percussão (`track.instrument.percussion`, canal 10 do General MIDI) não são tocadas. O
+    resumo as mostra como "percussão, não tocada".
 - A partir da etapa 4: piano virtual.
 - A partir da etapa 7: geração dos comandos de luz.
 - Não tem acesso ao Node.js.
@@ -64,13 +71,23 @@ Configuração do `BrowserWindow`:
 
 Proteções adicionais:
 
-- A Content-Security-Policy em `src/renderer/index.html` só permite scripts locais.
+- A Content-Security-Policy em `src/renderer/index.html` só permite scripts locais. Desde a etapa 3 ela
+  também tem `worker-src 'self' blob:`: o Tone.js cria o relógio interno num Web Worker a partir de um
+  `blob:`. Sem isso ele cai para `setTimeout`, que o Chromium desacelera com a janela em segundo plano, e o
+  andamento fica irregular. `script-src` continua `'self'`.
 - Links externos abrem no navegador do sistema (`setWindowOpenHandler`).
 
 ## Tempo e sincronização _(etapas 3 a 7)_
 
 - A referência de tempo é o Transport do Tone.js. O piano e os comandos de luz são derivados dele, sem um
-  segundo relógio.
+  segundo relógio. A posição mostrada na tela é lida de `Transport.seconds` a cada quadro
+  (`requestAnimationFrame`) enquanto toca.
+- Os callbacks do Transport rodam um pouco **antes** do som (lookahead do Tone.js, ~0,1 s) e recebem o
+  `time` exato do áudio. Notas são sempre agendadas com esse `time`, nunca com `Tone.now()`.
+- Para mudar algo visível no instante do som (piano, etapa 4), usar `Tone.getDraw().schedule(cb, time)`.
+  Atenção: o Draw depende de `requestAnimationFrame`, que **não roda com a janela minimizada**, e descarta
+  eventos atrasados. Por isso o **fim da música** (que muda o estado do player) usa um `setTimeout` com o
+  atraso até o `time` do áudio, e não o Draw.
 - O áudio do Tone.js é agendado com antecedência, e o caminho até o LED (IPC → Python → OpenRGB →
   teclado) tem atraso próprio. Por isso haverá um **offset de latência ajustável** para a luz, calibrado
   na etapa 7.
