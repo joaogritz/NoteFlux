@@ -85,9 +85,13 @@ docs/         arquitetura e, mais adiante, o protocolo Electron–Python
 2. Importação e leitura de MIDI
 3. Reprodução com play, pause e stop
 4. Piano virtual sincronizado
-5. Teste isolado do controle RGB em Python
+5. Teste isolado do controle RGB em Python, incluindo o testador de LEDs (`keymap.json`)
 6. Integração Electron–Python
 7. Sincronização MIDI–RGB e calibração de latência
+
+Ao longo das etapas entra a tela de **Configurações**: formato do teclado (60%, 65%, 75%, TKL, 100% ou
+personalizado), padrão ABNT2/ANSI, teclas protegidas (que o app nunca acende), destino da iluminação e
+ajuste de latência. Detalhes em [docs/architecture.md](docs/architecture.md#configurações).
 
 Fora do MVP: Spotify, PDF, MusicXML, transcrição de áudio, reconhecimento do que o usuário toca, login,
 banco de dados, nuvem e integração com vários SDKs de fabricantes.

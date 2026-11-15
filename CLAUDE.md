@@ -42,8 +42,24 @@ Electron + electron-vite · React + TypeScript · @tonejs/midi · Tone.js · Pyt
 - Prever **ajuste de latência do RGB**: um LED acionado no callback de agendamento não coincide
   automaticamente com o som.
 - O app deve funcionar **sem Python e sem hardware RGB**, com um **modo simulado** de iluminação.
-- Parar a reprodução apaga as notas e os LEDs acionados pelo app.
+- Parar a reprodução apaga as notas e libera os LEDs acionados pelo app (restaura a iluminação anterior
+  quando o dispositivo permitir).
 - Encerrar o processo Python corretamente ao fechar o app ou quando ele falhar.
+
+## Teclado e configurações (decisões de 14/11/2026)
+
+Detalhes em `docs/architecture.md`, seções "Teclado de iluminação" e "Configurações".
+
+- O teclado iluminado é o **teclado do computador** (gamer RGB), não um teclado musical.
+- Cadeia: nota MIDI → código de tecla (renderer) → índice de LED (Python, via `keymap.json`). O
+  vocabulário comum são os códigos do `KeyboardEvent.code` (`KeyA`, `Escape`, `IntlRo`…).
+- **Teclas protegidas** (padrão: Esc, Enter, Backspace, Tab, Shift, Ctrl, Alt, Win, Espaço, setas) nunca
+  são acesas. A regra é aplicada no renderer e repetida no Python como trava.
+- **Configurações:** formato (60%, 65%, 75%, TKL, 100%, Personalizado), padrão físico (ABNT2, ANSI),
+  teclas protegidas, keymap, destino da iluminação, dispositivo e latência. Ficam salvas em
+  `settings.json` pelo main e são acessadas só pelo preload.
+- **Testador de LEDs** `python/tools/keymap_probe.py` na etapa 5: usa os nomes dos LEDs do OpenRGB ou
+  acende um LED por vez para a pessoa indicar a tecla.
 
 ## Fora do MVP — não adicionar
 
@@ -75,5 +91,6 @@ dados · nuvem · vários SDKs de fabricantes · integração obrigatória com b
 
 ## Em aberto
 
-Modelo e compatibilidade do teclado RGB · sistema operacional de cada colaborador · mapeamento entre notas
-e teclas físicas · samples de piano e licenças · empacotamento do auxiliar Python.
+Modelo e compatibilidade do teclado RGB · sistema operacional de cada colaborador · regra de mapeamento
+entre notas e teclas · restauração da iluminação anterior · samples de piano e licenças · empacotamento do
+auxiliar Python.
