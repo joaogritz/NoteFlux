@@ -5,15 +5,15 @@ música e sincroniza a iluminação RGB de um teclado gamer.
 
 O app segue o arquivo MIDI: não reconhece notas pelo áudio nem escuta o usuário tocar.
 
-> **Estado atual: etapa 1 (base desktop).** A janela abre com o botão "Importar MIDI", que ainda não tem
-> implementação. Reprodução, piano virtual e RGB vêm nas próximas etapas (ver [Roadmap](#roadmap)).
+> **Estado atual: etapa 3 (reprodução).** O app importa um MIDI, mostra o resumo e toca a música com play,
+> pause e stop. Piano virtual e RGB vêm nas próximas etapas (ver [Roadmap](#roadmap)).
 
 ## Stack
 
 - [Electron](https://www.electronjs.org/) com [electron-vite](https://electron-vite.org/)
 - React + TypeScript na interface
-- [@tonejs/midi](https://github.com/Tonejs/Midi) para ler MIDI _(etapa 2)_
-- [Tone.js](https://tonejs.github.io/) para reprodução _(etapa 3)_
+- [@tonejs/midi](https://github.com/Tonejs/Midi) para ler MIDI
+- [Tone.js](https://tonejs.github.io/) para reprodução
 - Python + [openrgb-python](https://github.com/jath03/openrgb-python) + [OpenRGB](https://openrgb.org/) para
   o RGB _(etapas 5 a 7)_
 
@@ -94,8 +94,8 @@ docs/         arquitetura e, mais adiante, o protocolo Electron–Python
 ## Roadmap
 
 1. **Base Electron + React + TypeScript** ✅
-2. Importação e leitura de MIDI
-3. Reprodução com play, pause e stop
+2. Importação e leitura de MIDI ✅
+3. Reprodução com play, pause e stop ✅
 4. Piano virtual sincronizado
 5. Teste isolado do controle RGB em Python, incluindo o testador de LEDs (`keymap.json`)
 6. Integração Electron–Python

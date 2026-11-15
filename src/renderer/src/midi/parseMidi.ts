@@ -4,6 +4,8 @@ export interface TrackSummary {
   index: number
   name: string
   noteCount: number
+  /** Trilha de percussão (canal 10 do General MIDI). Não é tocada. */
+  isPercussion: boolean
 }
 
 export interface MidiSummary {
@@ -40,7 +42,8 @@ export function parseMidi(data: Uint8Array): ParsedMidi {
   const tracks: TrackSummary[] = midi.tracks.map((track, i) => ({
     index: i,
     name: track.name && track.name.trim() !== '' ? track.name.trim() : `Trilha ${i + 1}`,
-    noteCount: track.notes.length
+    noteCount: track.notes.length,
+    isPercussion: track.instrument.percussion
   }))
 
   const totalNotes = tracks.reduce((total, track) => total + track.noteCount, 0)
