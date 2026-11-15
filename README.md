@@ -46,6 +46,18 @@ npm install
 
 O `npm install` também baixa o binário do Electron.
 
+### Windows: erro "a execução de scripts foi desabilitada"
+
+Se o PowerShell bloquear o `npm`, use `npm.cmd` no lugar (`npm.cmd install`, `npm.cmd run dev`) ou libere
+scripts locais para o seu usuário, uma única vez:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
+Clone o projeto numa pasta do seu usuário (por exemplo `C:\Users\<você>\Projetos`), e não em
+`C:\Windows\System32`, que é onde o PowerShell abre quando executado como administrador.
+
 ## Execução
 
 | Comando             | O que faz                                                   |

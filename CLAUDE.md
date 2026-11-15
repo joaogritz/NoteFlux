@@ -72,14 +72,14 @@ dados · nuvem · vários SDKs de fabricantes · integração obrigatória com b
 
 ## Comandos verificados
 
-| Comando               | Verificado                                              |
-| --------------------- | ------------------------------------------------------- |
-| `npm install`         | Sim (Linux, Node 22)                                    |
-| `npm run typecheck`   | Sim, sem erros                                          |
-| `npm run lint`        | Sim, sem erros                                          |
-| `npm run build`       | Sim                                                     |
-| App a partir do build | Sim, janela renderizada em display virtual (Linux)      |
-| `npm run dev`         | Sim no Linux (display virtual); **pendente no Windows** |
+| Comando               | Verificado                                         |
+| --------------------- | -------------------------------------------------- |
+| `npm install`         | Sim (Linux, Node 22; Windows)                      |
+| `npm run typecheck`   | Sim, sem erros                                     |
+| `npm run lint`        | Sim, sem erros                                     |
+| `npm run build`       | Sim                                                |
+| App a partir do build | Sim, janela renderizada em display virtual (Linux) |
+| `npm run dev`         | Sim no Linux (display virtual) e no Windows        |
 
 ## Estado atual
 
