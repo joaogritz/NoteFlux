@@ -23,6 +23,7 @@ export interface MidiPlayer {
   /** Para e volta para 0:00. */
   stop(): void
   getState(): PlaybackState
+  /** Posição que está soando agora (sem o lookahead do Tone.js). 0 quando parado. */
   getPositionSeconds(): number
   getDurationSeconds(): number
   /** Assina mudanças de estado. Devolve a função para cancelar a assinatura. */
@@ -185,7 +186,13 @@ export function createMidiPlayer(): MidiPlayer {
 
   const getPositionSeconds = (): number => {
     if (state === 'stopped') return 0
-    return Math.min(Math.max(0, Tone.getTransport().seconds), durationSeconds)
+    // Posição audível: `Transport.seconds` é a posição em Tone.now(), ~0,1 s à frente do som (lookahead).
+    // Para a tela (tempo e piano), o que importa é o que está soando agora.
+    // Pausado, a posição é a do ponto de pausa (que fica no fim do lookahead).
+    const transport = Tone.getTransport()
+    const position =
+      state === 'paused' ? transport.seconds : transport.getSecondsAtTime(Tone.immediate())
+    return Math.min(Math.max(0, position), durationSeconds)
   }
 
   const dispose = (): void => {

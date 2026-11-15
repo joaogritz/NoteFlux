@@ -49,7 +49,11 @@ comandos de iluminação.
     aplica as mudanças de andamento). O `Transport.bpm` não é alterado.
   - Trilhas de percussão (`track.instrument.percussion`, canal 10 do General MIDI) não são tocadas. O
     resumo as mostra como "percussão, não tocada".
-- A partir da etapa 4: piano virtual.
+- A partir da etapa 4: piano virtual (`src/renderer/src/piano/`).
+  - `pianoLayout.ts`: as 88 teclas (Lá0 a Dó8, MIDI 21 a 108), com posição em porcentagem da largura.
+  - `activeNotes.ts`: funções puras. `buildNoteTimeline` monta a lista de notas tocáveis (sem percussão) e
+    `getActiveNotes` devolve as teclas soando numa posição, com busca binária limitada pela maior duração.
+  - `Piano.tsx`: desenha as teclas com `div`s e acende as que recebe. Só visualização.
 - A partir da etapa 7: geração dos comandos de luz.
 - Não tem acesso ao Node.js.
 
@@ -80,14 +84,19 @@ Proteções adicionais:
 ## Tempo e sincronização _(etapas 3 a 7)_
 
 - A referência de tempo é o Transport do Tone.js. O piano e os comandos de luz são derivados dele, sem um
-  segundo relógio. A posição mostrada na tela é lida de `Transport.seconds` a cada quadro
-  (`requestAnimationFrame`) enquanto toca.
+  segundo relógio.
 - Os callbacks do Transport rodam um pouco **antes** do som (lookahead do Tone.js, ~0,1 s) e recebem o
   `time` exato do áudio. Notas são sempre agendadas com esse `time`, nunca com `Tone.now()`.
-- Para mudar algo visível no instante do som (piano, etapa 4), usar `Tone.getDraw().schedule(cb, time)`.
-  Atenção: o Draw depende de `requestAnimationFrame`, que **não roda com a janela minimizada**, e descarta
-  eventos atrasados. Por isso o **fim da música** (que muda o estado do player) usa um `setTimeout` com o
-  atraso até o `time` do áudio, e não o Draw.
+- **Posição audível.** `Transport.seconds` é a posição em `Tone.now()`, ~0,1 s à frente do som. Para a tela, o
+  player usa `transport.getSecondsAtTime(Tone.immediate())`, que é o que está soando agora. Pausado, usa o
+  ponto de pausa (`Transport.seconds`).
+- **O piano é calculado pela posição**, a cada quadro (`requestAnimationFrame`): uma tecla está acesa quando
+  `início <= posição < fim` de alguma nota. Não há eventos de liga/desliga. Assim não sobram teclas presas
+  depois de pausar, parar ou restaurar a janela minimizada, e o React só é atualizado quando o conjunto de
+  teclas muda.
+- **Não usar `Tone.getDraw()`** para estado que precisa ficar certo: ele depende de `requestAnimationFrame`,
+  que não roda com a janela minimizada, e descarta eventos atrasados. Por isso o **fim da música** (que muda
+  o estado do player) usa um `setTimeout` com o atraso até o `time` do áudio.
 - O áudio do Tone.js é agendado com antecedência, e o caminho até o LED (IPC → Python → OpenRGB →
   teclado) tem atraso próprio. Por isso haverá um **offset de latência ajustável** para a luz, calibrado
   na etapa 7.
