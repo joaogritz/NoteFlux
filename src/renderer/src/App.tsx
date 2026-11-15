@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import type { Midi } from '@tonejs/midi'
 import { parseMidi, type MidiSummary } from './midi/parseMidi'
+import { createMidiPlayer, hasPlayableNotes } from './playback/player'
 
 interface LoadedMidi {
   fileName: string
@@ -15,10 +16,53 @@ function formatDuration(durationSeconds: number): string {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
 
+/** Posição corrente: arredonda para baixo, para não mostrar 0:01 antes de passar 1 segundo. */
+function formatPosition(positionSeconds: number): string {
+  return formatDuration(Math.floor(Math.max(0, positionSeconds)))
+}
+
 function App(): React.JSX.Element {
   const [loadedMidi, setLoadedMidi] = useState<LoadedMidi | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [audioError, setAudioError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [livePosition, setLivePosition] = useState<number>(0)
+
+  // Leve e sem efeitos colaterais: os recursos do Tone.js só são criados no load().
+  const [player] = useState(createMidiPlayer)
+  const playbackState = useSyncExternalStore(player.subscribe, player.getState)
+
+  // O player segue o arquivo carregado. Também refaz o agendamento depois do ciclo do StrictMode.
+  useEffect(() => {
+    if (loadedMidi) {
+      player.load(loadedMidi.midi)
+    } else {
+      player.unload()
+    }
+  }, [player, loadedMidi])
+
+  useEffect(() => () => player.dispose(), [player])
+
+  // Enquanto toca, a posição na tela é lida do Transport a cada quadro. Não há relógio próprio.
+  useEffect(() => {
+    if (playbackState !== 'playing') return
+    let frameId = 0
+    const update = (): void => {
+      setLivePosition(player.getPositionSeconds())
+      frameId = requestAnimationFrame(update)
+    }
+    frameId = requestAnimationFrame(update)
+    return () => cancelAnimationFrame(frameId)
+  }, [player, playbackState])
+
+  const positionSeconds =
+    playbackState === 'playing'
+      ? livePosition
+      : playbackState === 'paused'
+        ? player.getPositionSeconds()
+        : 0
+  const durationSeconds = loadedMidi?.summary.durationSeconds ?? 0
+  const canPlay = loadedMidi !== null && hasPlayableNotes(loadedMidi.midi)
 
   const handleImportClick = async (): Promise<void> => {
     setIsLoading(true)
@@ -29,6 +73,8 @@ function App(): React.JSX.Element {
       if (result === null) {
         return
       }
+
+      setAudioError(null)
 
       if (!result.ok) {
         if (result.error === 'too_large') {
@@ -57,6 +103,20 @@ function App(): React.JSX.Element {
       setLoadedMidi(null)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handlePlayPauseClick = async (): Promise<void> => {
+    if (playbackState === 'playing') {
+      player.pause()
+      return
+    }
+    try {
+      setAudioError(null)
+      await player.play()
+    } catch (playError) {
+      console.error('Falha ao iniciar o áudio:', playError)
+      setAudioError('Não foi possível iniciar o áudio.')
     }
   }
 
@@ -110,6 +170,45 @@ function App(): React.JSX.Element {
               </div>
             </div>
 
+            <div className="playback">
+              <div className="playback-controls">
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={handlePlayPauseClick}
+                  disabled={isLoading || !canPlay}
+                >
+                  {playbackState === 'playing' ? 'Pausar' : 'Tocar'}
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={player.stop}
+                  disabled={isLoading || playbackState === 'stopped'}
+                >
+                  Parar
+                </button>
+                <span className="playback-time" aria-label="Posição e duração">
+                  {formatPosition(positionSeconds)} / {formatDuration(durationSeconds)}
+                </span>
+              </div>
+              <progress
+                className="playback-progress"
+                max={durationSeconds > 0 ? durationSeconds : 1}
+                value={Math.min(positionSeconds, durationSeconds)}
+              />
+              {audioError && (
+                <p className="notice notice-error" role="status" aria-live="polite">
+                  {audioError}
+                </p>
+              )}
+              {!canPlay && (
+                <p className="notice" role="status">
+                  Este arquivo não tem notas para tocar.
+                </p>
+              )}
+            </div>
+
             <div className="tracks-section">
               <h3 className="tracks-title">Trilhas</h3>
               <table className="tracks-table">
@@ -125,6 +224,7 @@ function App(): React.JSX.Element {
                       <td className="track-name">{track.name}</td>
                       <td className="track-notes">
                         {track.noteCount} {track.noteCount === 1 ? 'nota' : 'notas'}
+                        {track.isPercussion && ' · percussão, não tocada'}
                       </td>
                     </tr>
                   ))}
