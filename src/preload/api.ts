@@ -1,6 +1,14 @@
+export interface MidiFileData {
+  fileName: string
+  data: Uint8Array
+}
+
+export type OpenMidiResult =
+  { ok: true; file: MidiFileData } | { ok: false; error: 'too_large' | 'read_failed' } | null
+
 /**
  * Contrato da API exposta pelo preload em `window.noteflux`.
- *
- * Vazio na etapa 1. A etapa 2 deve adicionar aqui a função de importação de MIDI.
  */
-export interface NoteFluxApi {}
+export interface NoteFluxApi {
+  openMidiFile(): Promise<OpenMidiResult>
+}

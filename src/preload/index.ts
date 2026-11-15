@@ -1,4 +1,4 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import type { NoteFluxApi } from './api'
 
 /**
@@ -7,9 +7,9 @@ import type { NoteFluxApi } from './api'
  * Regras:
  * - Expor apenas funções específicas, nunca o ipcRenderer inteiro.
  * - Cada função nova deve ser tipada em ./api.ts e documentada em docs/architecture.md.
- *
- * Na etapa 1 a API ainda está vazia: o botão "Importar MIDI" não tem implementação.
  */
-const api: NoteFluxApi = {}
+const api: NoteFluxApi = {
+  openMidiFile: () => ipcRenderer.invoke('midi:open')
+}
 
 contextBridge.exposeInMainWorld('noteflux', api)
