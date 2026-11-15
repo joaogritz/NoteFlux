@@ -103,6 +103,6 @@ dados · nuvem · vários SDKs de fabricantes · integração obrigatória com b
 
 ## Em aberto
 
-Modelo e compatibilidade do teclado RGB · sistema operacional de cada colaborador · regra de mapeamento
+Modelo e compatibilidade do teclado RGB (o MonsGeek FUN60 MAX não é reconhecido pelo OpenRGB; ver `docs/architecture.md`) · sistema operacional de cada colaborador · regra de mapeamento
 entre notas e teclas · restauração da iluminação anterior · samples de piano e licenças · empacotamento do
 auxiliar Python.

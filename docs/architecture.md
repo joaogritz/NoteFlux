@@ -184,6 +184,11 @@ o mesmo teclado.
 ## Pontos em aberto
 
 - Modelo do teclado e suporte do OpenRGB (controle por tecla ou por zona, nomes dos LEDs).
+  - **MonsGeek FUN60 MAX** (USB `VID_3151&PID_5030`, placa RongYuan): **não reconhecido pelo OpenRGB** no
+    teste de 15/11/2026 no Windows. Ele não aparece na lista de dispositivos, e a lista de suportados da versão
+    instalada só tem o Akko 3068B Plus entre MonsGeek, Akko e ROYUAN. Alternativa a investigar: falar com o
+    teclado direto pelo USB usando o protocolo RongYuan, que tem documentação independente. Isso foge da
+    arquitetura atual e precisa de decisão.
 - Regra de mapeamento nota → tecla e tratamento de notas fora da faixa.
 - Se o dispositivo permite restaurar a iluminação anterior.
 - Empacotamento do Python junto com o app.
