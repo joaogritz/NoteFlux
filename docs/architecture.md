@@ -32,8 +32,9 @@ comandos de iluminação.
 ### Preload — `src/preload/`
 
 - Expõe `window.noteflux` pelo `contextBridge`.
-- O contrato fica em `src/preload/api.ts`. Cada função é específica, por exemplo `openMidiFile()`,
-  e nunca um canal IPC genérico.
+- O contrato fica em `src/preload/api.ts`. Cada função é específica e tipada, nunca um canal IPC genérico.
+- Funções expostas:
+  - `openMidiFile()`: invoca o canal IPC `midi:open` no processo principal para abrir o seletor de arquivos, retornando os bytes do MIDI (`Uint8Array`) e o nome do arquivo, erro tratado (`too_large` ou `read_failed`) ou `null` em caso de cancelamento.
 - Roda com `sandbox: true`, então só pode importar `electron` (o bundle é gerado pelo electron-vite).
 
 ### Renderer — `src/renderer/`

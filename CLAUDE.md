@@ -72,22 +72,23 @@ dados · nuvem · vários SDKs de fabricantes · integração obrigatória com b
 
 ## Comandos verificados
 
-| Comando               | Verificado                                         |
-| --------------------- | -------------------------------------------------- |
-| `npm install`         | Sim (Linux, Node 22; Windows)                      |
-| `npm run typecheck`   | Sim, sem erros                                     |
-| `npm run lint`        | Sim, sem erros                                     |
-| `npm run build`       | Sim                                                |
-| App a partir do build | Sim, janela renderizada em display virtual (Linux) |
-| `npm run dev`         | Sim no Linux (display virtual) e no Windows        |
+| Comando               | Verificado                                                      |
+| --------------------- | --------------------------------------------------------------- |
+| `npm install`         | Sim (Linux, Node 22; Windows, Node 26)                          |
+| `npm run typecheck`   | Sim, sem erros (Linux, Windows)                                 |
+| `npm run lint`        | Sim, sem erros (Linux, Windows)                                 |
+| `npm run build`       | Sim (Linux, Windows)                                            |
+| App a partir do build | Sim, janela renderizada (Linux em display virtual, Windows E2E) |
+| `npm run dev`         | Sim no Linux (display virtual) e no Windows                     |
 
 ## Estado atual
 
-- **Etapa 1 — Base desktop: concluída.** Janela "NoteFlux" com o botão "Importar MIDI", que só mostra
-  um aviso. A API do preload (`window.noteflux`) ainda está vazia.
-- **Próxima: etapa 2 — Importar e ler MIDI.** Diálogo de arquivo no main (filtro `.mid/.midi`), função
-  tipada no preload, leitura com `@tonejs/midi` no renderer e exibição de duração, trilhas e quantidade
-  de notas. Sem reprodução nessa etapa. Briefing: `docs/tasks/etapa-2-importar-midi.md`.
+- **Etapa 2 — Importar e ler MIDI: concluída.** Diálogo de arquivo no main (filtro `.mid/.midi`, limite de 10 MB),
+  função tipada `openMidiFile` no preload, leitura com `@tonejs/midi` no renderer (`parseMidi.ts`), exibição no
+  `App.tsx` de nome do arquivo, duração (`m:ss`), total de trilhas, total de notas e tabela de trilhas com nomes e
+  quantidade de notas. Tratamento de trilhas sem nome (`Trilha N`), mensagens de erro em português e cancelamento.
+- **Próxima: etapa 3 — Reproduzir MIDI com Tone.js.** Controle da linha do tempo com o Transport do Tone.js,
+  agendamento das notas e reprodução de som. Sem piano virtual ou RGB nesta próxima etapa.
 
 ## Em aberto
 
