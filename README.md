@@ -5,8 +5,9 @@ música e sincroniza a iluminação RGB de um teclado gamer.
 
 O app segue o arquivo MIDI: não reconhece notas pelo áudio nem escuta o usuário tocar.
 
-> **Estado atual: etapa 3 (reprodução).** O app importa um MIDI, mostra o resumo e toca a música com play,
-> pause e stop. Piano virtual e RGB vêm nas próximas etapas (ver [Roadmap](#roadmap)).
+> **Estado atual: etapa 4 (piano virtual).** O app importa um MIDI, toca a música com play, pause e stop e
+> mostra um piano de 88 teclas acendendo junto com as notas. O RGB vem nas próximas etapas (ver
+> [Roadmap](#roadmap)).
 
 ## Stack
 
@@ -96,7 +97,7 @@ docs/         arquitetura e, mais adiante, o protocolo Electron–Python
 1. **Base Electron + React + TypeScript** ✅
 2. Importação e leitura de MIDI ✅
 3. Reprodução com play, pause e stop ✅
-4. Piano virtual sincronizado
+4. Piano virtual sincronizado ✅
 5. Teste isolado do controle RGB em Python, incluindo o testador de LEDs (`keymap.json`)
 6. Integração Electron–Python
 7. Sincronização MIDI–RGB e calibração de latência
