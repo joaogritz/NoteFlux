@@ -1,7 +1,11 @@
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import type { Midi } from '@tonejs/midi'
 import { parseMidi, type MidiSummary } from './midi/parseMidi'
 import { createMidiPlayer, hasPlayableNotes } from './playback/player'
+import Piano from './piano/Piano'
+import { buildNoteTimeline, EMPTY_TIMELINE, getActiveNotes, sameNotes } from './piano/activeNotes'
+
+const NO_NOTES: ReadonlySet<number> = new Set()
 
 interface LoadedMidi {
   fileName: string
@@ -27,6 +31,7 @@ function App(): React.JSX.Element {
   const [audioError, setAudioError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [livePosition, setLivePosition] = useState<number>(0)
+  const [liveActiveNotes, setLiveActiveNotes] = useState<ReadonlySet<number>>(NO_NOTES)
 
   // Leve e sem efeitos colaterais: os recursos do Tone.js só são criados no load().
   const [player] = useState(createMidiPlayer)
@@ -43,17 +48,35 @@ function App(): React.JSX.Element {
 
   useEffect(() => () => player.dispose(), [player])
 
-  // Enquanto toca, a posição na tela é lida do Transport a cada quadro. Não há relógio próprio.
+  const timeline = useMemo(
+    () => (loadedMidi ? buildNoteTimeline(loadedMidi.midi) : EMPTY_TIMELINE),
+    [loadedMidi]
+  )
+
+  // Enquanto toca, a posição e as teclas acesas são lidas do Transport a cada quadro. Não há relógio
+  // próprio nem eventos de liga/desliga: o piano é sempre o retrato da posição atual.
   useEffect(() => {
     if (playbackState !== 'playing') return
     let frameId = 0
+    // `null` força a primeira atualização do quadro.
+    let lastActive: ReadonlySet<number> | null = null
     const update = (): void => {
-      setLivePosition(player.getPositionSeconds())
+      const position = player.getPositionSeconds()
+      setLivePosition(position)
+      const active = getActiveNotes(timeline, position)
+      if (lastActive === null || !sameNotes(active, lastActive)) {
+        lastActive = active
+        setLiveActiveNotes(active)
+      }
       frameId = requestAnimationFrame(update)
     }
     frameId = requestAnimationFrame(update)
-    return () => cancelAnimationFrame(frameId)
-  }, [player, playbackState])
+    return () => {
+      cancelAnimationFrame(frameId)
+      // Ao pausar ou parar, o próximo play começa com o piano apagado, sem o desenho antigo.
+      setLiveActiveNotes(NO_NOTES)
+    }
+  }, [player, playbackState, timeline])
 
   const positionSeconds =
     playbackState === 'playing'
@@ -61,6 +84,8 @@ function App(): React.JSX.Element {
       : playbackState === 'paused'
         ? player.getPositionSeconds()
         : 0
+  // Pausado, parado ou sem arquivo: piano apagado.
+  const activeNotes = playbackState === 'playing' ? liveActiveNotes : NO_NOTES
   const durationSeconds = loadedMidi?.summary.durationSeconds ?? 0
   const canPlay = loadedMidi !== null && hasPlayableNotes(loadedMidi.midi)
 
@@ -121,120 +146,125 @@ function App(): React.JSX.Element {
   }
 
   return (
-    <main className="app">
-      <header className="app-header">
-        <h1 className="app-title">NoteFlux</h1>
-        <p className="app-subtitle">Piano virtual e iluminação RGB guiados por MIDI</p>
-      </header>
+    <div className="app-shell">
+      <main className="app">
+        <header className="app-header">
+          <h1 className="app-title">NoteFlux</h1>
+          <p className="app-subtitle">Piano virtual e iluminação RGB guiados por MIDI</p>
+        </header>
 
-      <section className="import-panel">
-        <button
-          type="button"
-          className="primary-button"
-          onClick={handleImportClick}
-          disabled={isLoading}
-        >
-          {isLoading ? 'Carregando…' : 'Importar MIDI'}
-        </button>
+        <section className="import-panel">
+          <button
+            type="button"
+            className="primary-button"
+            onClick={handleImportClick}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Carregando…' : 'Importar MIDI'}
+          </button>
 
-        {error && (
-          <p className="notice notice-error" role="status" aria-live="polite">
-            {error}
-          </p>
-        )}
+          {error && (
+            <p className="notice notice-error" role="status" aria-live="polite">
+              {error}
+            </p>
+          )}
 
-        {!error && !loadedMidi && (
-          <p className="notice" role="status" aria-live="polite">
-            Nenhum arquivo carregado.
-          </p>
-        )}
+          {!error && !loadedMidi && (
+            <p className="notice" role="status" aria-live="polite">
+              Nenhum arquivo carregado.
+            </p>
+          )}
 
-        {loadedMidi && (
-          <div className="midi-summary">
-            <h2 className="midi-filename">{loadedMidi.fileName}</h2>
+          {loadedMidi && (
+            <div className="midi-summary">
+              <h2 className="midi-filename">{loadedMidi.fileName}</h2>
 
-            <div className="midi-metrics">
-              <div className="metric">
-                <span className="metric-label">Duração</span>
-                <span className="metric-value">
-                  {formatDuration(loadedMidi.summary.durationSeconds)}
-                </span>
+              <div className="midi-metrics">
+                <div className="metric">
+                  <span className="metric-label">Duração</span>
+                  <span className="metric-value">
+                    {formatDuration(loadedMidi.summary.durationSeconds)}
+                  </span>
+                </div>
+                <div className="metric">
+                  <span className="metric-label">Trilhas</span>
+                  <span className="metric-value">{loadedMidi.summary.trackCount}</span>
+                </div>
+                <div className="metric">
+                  <span className="metric-label">Total de notas</span>
+                  <span className="metric-value">{loadedMidi.summary.totalNotes}</span>
+                </div>
               </div>
-              <div className="metric">
-                <span className="metric-label">Trilhas</span>
-                <span className="metric-value">{loadedMidi.summary.trackCount}</span>
-              </div>
-              <div className="metric">
-                <span className="metric-label">Total de notas</span>
-                <span className="metric-value">{loadedMidi.summary.totalNotes}</span>
-              </div>
-            </div>
 
-            <div className="playback">
-              <div className="playback-controls">
-                <button
-                  type="button"
-                  className="primary-button"
-                  onClick={handlePlayPauseClick}
-                  disabled={isLoading || !canPlay}
-                >
-                  {playbackState === 'playing' ? 'Pausar' : 'Tocar'}
-                </button>
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={player.stop}
-                  disabled={isLoading || playbackState === 'stopped'}
-                >
-                  Parar
-                </button>
-                <span className="playback-time" aria-label="Posição e duração">
-                  {formatPosition(positionSeconds)} / {formatDuration(durationSeconds)}
-                </span>
+              <div className="playback">
+                <div className="playback-controls">
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={handlePlayPauseClick}
+                    disabled={isLoading || !canPlay}
+                  >
+                    {playbackState === 'playing' ? 'Pausar' : 'Tocar'}
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={player.stop}
+                    disabled={isLoading || playbackState === 'stopped'}
+                  >
+                    Parar
+                  </button>
+                  <span className="playback-time" aria-label="Posição e duração">
+                    {formatPosition(positionSeconds)} / {formatDuration(durationSeconds)}
+                  </span>
+                </div>
+                <progress
+                  className="playback-progress"
+                  max={durationSeconds > 0 ? durationSeconds : 1}
+                  value={Math.min(positionSeconds, durationSeconds)}
+                />
+                {audioError && (
+                  <p className="notice notice-error" role="status" aria-live="polite">
+                    {audioError}
+                  </p>
+                )}
+                {!canPlay && (
+                  <p className="notice" role="status">
+                    Este arquivo não tem notas para tocar.
+                  </p>
+                )}
               </div>
-              <progress
-                className="playback-progress"
-                max={durationSeconds > 0 ? durationSeconds : 1}
-                value={Math.min(positionSeconds, durationSeconds)}
-              />
-              {audioError && (
-                <p className="notice notice-error" role="status" aria-live="polite">
-                  {audioError}
-                </p>
-              )}
-              {!canPlay && (
-                <p className="notice" role="status">
-                  Este arquivo não tem notas para tocar.
-                </p>
-              )}
-            </div>
 
-            <div className="tracks-section">
-              <h3 className="tracks-title">Trilhas</h3>
-              <table className="tracks-table">
-                <thead>
-                  <tr>
-                    <th>Trilha</th>
-                    <th>Notas</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loadedMidi.summary.tracks.map((track) => (
-                    <tr key={track.index}>
-                      <td className="track-name">{track.name}</td>
-                      <td className="track-notes">
-                        {track.noteCount} {track.noteCount === 1 ? 'nota' : 'notas'}
-                        {track.isPercussion && ' · percussão, não tocada'}
-                      </td>
+              <div className="tracks-section">
+                <h3 className="tracks-title">Trilhas</h3>
+                <table className="tracks-table">
+                  <thead>
+                    <tr>
+                      <th>Trilha</th>
+                      <th>Notas</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {loadedMidi.summary.tracks.map((track) => (
+                      <tr key={track.index}>
+                        <td className="track-name">{track.name}</td>
+                        <td className="track-notes">
+                          {track.noteCount} {track.noteCount === 1 ? 'nota' : 'notas'}
+                          {track.isPercussion && ' · percussão, não tocada'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        )}
-      </section>
-    </main>
+          )}
+        </section>
+      </main>
+      <footer className="piano-dock">
+        <Piano activeNotes={activeNotes} />
+      </footer>
+    </div>
   )
 }
 
